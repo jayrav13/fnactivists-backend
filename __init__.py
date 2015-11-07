@@ -193,8 +193,39 @@ def getLegislators():
 				"apikey":secret.FNAPI
 			}
 			r = requests.get("https://api.fiscalnote.com/legislator/" + data['legislator_id'], params=payload, timeout=5)
-			print r.text
 			return jsonify(**r.json())
+
+@app.route("/representatives", methods=['POST'])
+def representatives():
+	data = request.get_json()
+	if 'type' not in data or 'value' not in data or 'token' not in data:
+		return make_response(jsonify({"Error":"Invalid parameters"}), 400)
+	else:
+		user = Users.query.filter_by(token=data['token']).first()
+		if not user:
+			return make_response(jsonify({"Error":"Invalid user."}), 400)
+		else:
+			r = None
+			payload = {
+				"key" : secret.GoogleAPI,
+				data['type'] : data['value']
+			}
+			if data['type'] != "address" and data['type'] != "latlng":
+				return make_response(jsonify({"Error":"Invalid data types."}), 400)
+			else:
+				r = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params=payload)
+
+			r = r.json()
+			addr = r['results'][0]['formatted_address']
+
+			payload = {
+				"key" : secret.GoogleAPI,
+				"address" : addr
+			}
+
+			r = requests.get("https://www.googleapis.com/civicinfo/v2/representatives", params=payload)
+			return jsonify(**r.json())
+	
 
 if __name__ == "__main__":
 	app.run(host='0.0.0.0', debug=True)
