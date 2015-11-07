@@ -32,6 +32,7 @@ class Users(db.Model):
 	password = db.Column(db.String)
 	token = db.Column(db.String)
 	tags = relationship("Tags", backref="users", primaryjoin=("Users.id==Tags.user_id"))
+	bills = relationship("Bills", backref="users", primaryjoin=("Users.id==Bills.user_id"))
 
 	def __init__(self, email, password): 
 		self.email = email 
@@ -48,6 +49,17 @@ class Tags(db.Model):
 
 	def __init__(self, tag):
 		self.tag = tag
+
+class Bills(db.Model):
+
+	__tablename__ = "new"
+
+	id = db.Column(db.Integer, primary_key=True)
+	bill_id = db.Column(db.Integer)
+	user_id = db.Column(db.Integer, ForeignKey('users.id'))
+
+	def __init__(self, bill_id):
+		self.bill_id = bill_id
 
 if __name__ == "__main__":
 	manager.run()

@@ -4,7 +4,7 @@
 from flask import Flask, make_response, jsonify, request, abort, render_template
 import requests
 import secret
-from model import db, Users, Tags
+from model import db, Users, Tags, Bills
 import hashlib
 import json
 import sys
@@ -110,14 +110,15 @@ def getBills():
 		if not user:
 			return make_response(jsonify({"Error" : "Invalid user."}), 400)
 		else:
+			Bills.query.filter_by(user_id=user.id).delete()
 			result = []
 			for tag in user.tags:
 				print "Working on tag: " + tag.tag
-				result.append({tag.tag : apiBills(tag.tag)})
+				result.append({tag.tag : apiBills(tag.tag, user)})
  
 			return make_response(jsonify({"Success" : result}), 200)
 
-def apiBills(tag):
+def apiBills(tag, user):
 	print "Getting bills for tag: " + tag
 	payload = {
 		"q" : tag,
@@ -135,6 +136,9 @@ def apiBills(tag):
 
 	for element in r.json():
 		id = str(element['id'])
+
+		bill = Bills(int(id))
+		user.bills.append(bill)
 
 		print "Working on id " + id + " for tag " + tag
 
@@ -177,6 +181,7 @@ def apiBills(tag):
 
 		arr.append(obj.copy())
 	
+	db.session.commit()	
 	return arr
 
 @app.route("/legislators/get", methods=['POST'])
@@ -217,7 +222,6 @@ def representatives():
 
 			r = r.json()
 			addr = r['results'][0]['formatted_address']
-
 			payload = {
 				"key" : secret.GoogleAPI,
 				"address" : addr
