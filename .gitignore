@@ -4,3 +4,4 @@ migrations/
 *.pyc
 secret.py
 *.sqlite
+*.sqlite-journal

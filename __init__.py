@@ -115,7 +115,7 @@ def getBills():
 			for tag in user.tags:
 				print "Working on tag: " + tag.tag
 				result.append({tag.tag : apiBills(tag.tag, user)})
- 
+
 			return make_response(jsonify({"Success" : result}), 200)
 
 def apiBills(tag, user):
@@ -197,8 +197,18 @@ def getLegislators():
 			payload = {
 				"apikey":secret.FNAPI
 			}
-			r = requests.get("https://api.fiscalnote.com/legislator/" + data['legislator_id'], params=payload, timeout=5)
-			return jsonify(**r.json())
+			r = requests.get("https://api.fiscalnote.com/legislator/" + data['legislator_id'], params=payload, timeout=5).json()
+
+			response = {
+				"full_name" : r["full_name"],
+				"photo_url" : r["photo_url"],
+				"job_title" : r["job_title"],
+				"region" : r["addresses"],
+				"sources" : r["sources"],
+				"email" : r["email"]
+			}
+
+			return make_response(jsonify({"Success" : response}), 200)
 
 @app.route("/representatives", methods=['POST'])
 def representatives():
